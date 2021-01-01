@@ -14,7 +14,7 @@ variables:
   major: 2
   minor: 1
 
-name: $(major).$(minor)$(Rev:.r)
+# name: $(major).$(minor)$(Rev:.r)
 
 stages:
 - stage:
