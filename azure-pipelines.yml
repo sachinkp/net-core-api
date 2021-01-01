@@ -50,8 +50,8 @@ stages:
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
            prpatchVersionNumber ="$(major).$(minor)-PullRequest.$(brpatch)"
-           echo '##vso[task.setvariable variable=prereleaseVersionNumber;]$prpatchVersionNumber'
-           echo '##vso[build.updatebuildnumber]$prpatchVersionNumber'
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$prpatchVersionNumber"
+           echo "##vso[build.updatebuildnumber]$prpatchVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
