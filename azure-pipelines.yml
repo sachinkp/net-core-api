@@ -49,7 +49,7 @@ stages:
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
-           export brpatchVersionNumber ="$(major).$(minor)-PullRequest.$(brpatch)"
+           brpatchVersionNumber ="$(major).$(minor)-PullRequest.$(brpatch)"
            echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$brpatchVersionNumber"
            echo "##vso[build.updatebuildnumber]$brpatchVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
