@@ -41,6 +41,21 @@ stages:
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
+- stage:
+  # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
+  # It versions the build with the declared variable minor as prefix and 0 as seed.
+  # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
+  displayName: Build_Master_Version_Number
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Build_Master_Version_Number
+    variables:
+       patch: $[counter(variables['minor'], 0)]
+    steps:
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)"
+        name: SetMasterBuildName
+
 - stage: Build_Steps
   displayName: Build_Steps
   jobs:  
