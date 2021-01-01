@@ -19,7 +19,8 @@ variables:
   prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
   brpatch: $[counter(variables['build.sourcebranchname'], 0)]
   prpatchVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
-  brpatchVersionNumber: "$(major).$(minor)-PullRequest.$(brpatch)"
+  brpatchVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+  patchReleaseVersionNumber: "$(major).$(minor).$(patch)"
   releaseVersionNumber: 'Set dynamically below in a task'
   prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
   FOO: 'Set dynamically below in a task'
@@ -67,9 +68,8 @@ stages:
        patch: $[counter(variables['minor'], 0)]
     steps:
       - bash: |
-           patchReleaseVersionNumber=$(major).$(minor).$(patch)
-           echo "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
-           echo "##vso[task.setvariable variable=releaseVersionNumber;]$patchReleaseVersionNumber"
+           echo "##vso[task.setvariable variable=releaseVersionNumber;]$(patchReleaseVersionNumber)"
+           echo "##vso[build.updatebuildnumber]$(patchReleaseVersionNumber)"
            echo "$(releaseVersionNumber)"
         name: SetMasterBuildName
 
