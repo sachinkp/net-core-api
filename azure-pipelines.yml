@@ -11,10 +11,14 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  major: 2
-  minor: 1
+  # Manually adjust the version number as needed for semantic versioning.
+  # Revision or Patch is auto-incremented.
+  major: 2 # MAJOR version when you make incompatible API changes
+  minor: 1 # MINOR version when you add functionality in a backwards compatible manner
+  patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
+  versionNumber: $(major).$(minor).$(patch)
+  prereleaseVersionNumber: '$(versionNumber)-$(Build.SourceVersion)'  # Needed for nuget packages
 
-# name: $(major).$(minor)$(Rev:.r)
 
 stages:
 - stage:
@@ -49,8 +53,6 @@ stages:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
   - job: Build_Master_Version_Number
-    variables:
-       patch: $[counter(variables['minor'], 0)]
     steps:
       - bash: |
            echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)"
@@ -58,6 +60,7 @@ stages:
 
 - stage: Build_Steps
   displayName: Build_Steps
+  condition: always()
   jobs:  
   - job: Build_Steps
     displayName: Build_Steps
