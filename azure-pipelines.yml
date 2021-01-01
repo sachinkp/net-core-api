@@ -18,6 +18,7 @@ name: $(major).$(minor)$(Rev:.r)
 
 stages:
 - stage:
+  # this stage runs only if the branch is not master
   displayName: Build_Branch_Version_Number
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
