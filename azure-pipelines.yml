@@ -15,7 +15,7 @@ variables:
   # Revision or Patch is auto-incremented.
   major: 2 # MAJOR version when you make incompatible API changes
   minor: 1 # MINOR version when you add functionality in a backwards compatible manner
-  patch: 'Set dynamically below in a task' # version when you make backwards compatible bug fixes.
+  patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
   prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
   brpatch: $[counter(variables['build.sourcebranchname'], 0)]
   prpatchReleaseVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
@@ -64,8 +64,6 @@ stages:
   condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
   - job: Build_Master_Version_Number
-    variables:
-       patch: $[counter(variables['minor'], 0)]
     steps:
       - bash: |
            echo "##vso[task.setvariable variable=releaseVersionNumber;]$(patchReleaseVersionNumber)"
