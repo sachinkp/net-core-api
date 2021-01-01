@@ -18,8 +18,8 @@ variables:
   patch: 'Set dynamically below in a task' # version when you make backwards compatible bug fixes.
   prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
   brpatch: $[counter(variables['build.sourcebranchname'], 0)]
-  prpatchVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
-  brpatchVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+  prpatchReleaseVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
+  brpatchReleaseVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
   patchReleaseVersionNumber: "$(major).$(minor).$(patch)"
   releaseVersionNumber: 'Set dynamically below in a task'
   prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
@@ -42,17 +42,17 @@ stages:
           echo $(FOO)
         name: SetFoo
       - bash: |
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(prpatchVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(prpatchReleaseVersionNumber)"
            echo $(prereleaseVersionNumber)
-           echo "##vso[build.updatebuildnumber]$(prpatchVersionNumber)"
+           echo "##vso[build.updatebuildnumber]$(prpatchReleaseVersionNumber)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchReleaseVersionNumber)"
            echo $(prereleaseVersionNumber)
-           echo "##vso[build.updatebuildnumber]$(brpatchVersionNumber)"
+           echo "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
