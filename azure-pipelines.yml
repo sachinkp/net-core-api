@@ -36,8 +36,8 @@ stages:
     # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
       - bash: |
            bashprereleaseVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
-           echo "##vso[build.updatebuildnumber]$bashprereleaseVersionNumber"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$bashprereleaseVersionNumber"
+           echo "##vso[build.updatebuildnumber]$(bashprereleaseVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$(bashprereleaseVersionNumber)"
            echo "$(prereleaseVersionNumber)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
@@ -45,8 +45,8 @@ stages:
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
            bashprereleaseVersionNumber ="$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
-           echo "##vso[build.updatebuildnumber]$bashprereleaseVersionNumber"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$bashprereleaseVersionNumber"
+           echo "##vso[build.updatebuildnumber]$(bashprereleaseVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$(bashprereleaseVersionNumber)"
            echo "$(prereleaseVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
