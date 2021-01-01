@@ -37,6 +37,7 @@ stages:
       - bash: |
           FOO="runtime value"
           echo "##vso[task.setvariable variable=FOO]$FOO"
+        name: SetFoo
       - bash: |
            bashprereleaseVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
            echo "##vso[build.updatebuildnumber]$(bashprereleaseVersionNumber)"
