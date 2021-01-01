@@ -16,6 +16,10 @@ variables:
   major: 2 # MAJOR version when you make incompatible API changes
   minor: 1 # MINOR version when you add functionality in a backwards compatible manner
   patch: 'Set dynamically below in a task' # version when you make backwards compatible bug fixes.
+  prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
+  brpatch: $[counter(variables['build.sourcebranchname'], 0)]
+  prpatchVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
+  brpatchVersionNumber: "$(major).$(minor)-PullRequest.$(brpatch)"
   releaseVersionNumber: 'Set dynamically below in a task'
   prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
   FOO: 'Set dynamically below in a task'
@@ -27,9 +31,6 @@ stages:
   condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
   jobs:
   - job: Build_Branch_Version_Number
-    variables:
-      prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
-      brpatch: $[counter(variables['build.sourcebranchname'], 0)]
     steps:
     # build PR’s automatically and successfully before merging to the master branch
     # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
@@ -40,18 +41,17 @@ stages:
           echo $(FOO)
         name: SetFoo
       - bash: |
-           prpatchVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$prpatchVersionNumber"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(prpatchVersionNumber)"
            echo $(prereleaseVersionNumber)
-           echo "##vso[build.updatebuildnumber]$prpatchVersionNumber"
+           echo "##vso[build.updatebuildnumber]$(prpatchVersionNumber)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
-           let brpatchVersionNumber ="$(major).$(minor)-PullRequest.$(brpatch)"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$brpatchVersionNumber"
-           echo "##vso[build.updatebuildnumber]$brpatchVersionNumber"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchVersionNumber)"
+           echo $(prereleaseVersionNumber)
+           echo "##vso[build.updatebuildnumber]$(brpatchVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
