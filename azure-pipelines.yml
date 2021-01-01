@@ -11,15 +11,60 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  major: 1
+  major: 2
   minor: 1
 
 name: $(major).$(minor)$(Rev:.r)
 
-steps:
-- script: echo 'Hello, world!'
-  displayName: 'Run a one-line script'
-- script: |
-    echo 'Add other tasks to build, test, and deploy your project.'
-    echo 'See https://aka.ms/yaml'
-  displayName: 'Run a multi-line script'
+stages:
+- stage:
+  # this stage runs only if the branch is not master
+  displayName: Build_Branch_Version_Number
+  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Build_Branch_Version_Number
+    variables:
+      prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
+      brpatch: $[counter(variables['build.sourcebranchname'], 0)]
+    steps:
+    # build PR’s automatically and successfully before merging to the master branch
+    # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+    # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor)-PullRequest.$(prpatch)"
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+        name: SetPRBuildName
+    # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
+    # This function only runs when the build.reason is not equal to Pull Request.
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        name: SetBranchBuildName
+
+- stage:
+  # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
+  # It versions the build with the declared variable minor as prefix and 0 as seed.
+  # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
+  displayName: Build_Master_Version_Number
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Build_Master_Version_Number
+    variables:
+       patch: $[counter(variables['minor'], 0)]
+    steps:
+      - bash: |
+           echo "##vso[build.updatebuildnumber]$(major).$(minor).$(patch)"
+        name: SetMasterBuildName
+
+- stage: Build_Steps
+  displayName: Build_Steps
+  jobs:  
+  - job: Build_Steps
+    displayName: Build_Steps
+    steps:
+    - script: echo 'Hello, world!'
+      displayName: 'Run a one-line script'
+    - script: |
+        echo 'Add other tasks to build, test, and deploy your project.'
+        echo 'See https://aka.ms/yaml'
+      displayName: 'Run a multi-line script'
