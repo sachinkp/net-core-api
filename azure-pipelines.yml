@@ -35,18 +35,18 @@ stages:
     # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
     # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
       - bash: |
-           prereleaseVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
-           echo "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$prereleaseVersionNumber"
+           bashprereleaseVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
+           echo "##vso[build.updatebuildnumber]$bashprereleaseVersionNumber"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$bashprereleaseVersionNumber"
            echo "$(prereleaseVersionNumber)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
-           prereleaseVersionNumber ="$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
-           echo "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$prereleaseVersionNumber"
+           bashprereleaseVersionNumber ="$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+           echo "##vso[build.updatebuildnumber]$bashprereleaseVersionNumber"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$bashprereleaseVersionNumber"
            echo "$(prereleaseVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
@@ -63,9 +63,9 @@ stages:
        patch: $[counter(variables['minor'], 0)]
     steps:
       - bash: |
-           releaseVersionNumber=$(major).$(minor).$(patch)
-           echo "##vso[build.updatebuildnumber]$releaseVersionNumber"
-           echo "##vso[task.setvariable variable=releaseVersionNumber]$releaseVersionNumber"
+           bashreleaseVersionNumber=$(major).$(minor).$(patch)
+           echo "##vso[build.updatebuildnumber]$bashreleaseVersionNumber"
+           echo "##vso[task.setvariable variable=releaseVersionNumber]$bashreleaseVersionNumber"
            echo "$(releaseVersionNumber)"
         name: SetMasterBuildName
 
