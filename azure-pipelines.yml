@@ -41,18 +41,18 @@ stages:
         name: SetFoo
       - bash: |
            prpatchVersionNumber ="$(major).$(minor)-PullRequest.$(prpatch)"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$prpatchVersionNumber"
-           echo "$(prereleaseVersionNumber)"
-           echo "##vso[build.updatebuildnumber]$(prereleaseVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$prpatchVersionNumber"
+           echo $(prereleaseVersionNumber)
+           echo "##vso[build.updatebuildnumber]$prpatchVersionNumber"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
            brpatchVersionNumber ="$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber]$brpatchVersionNumber"
-           echo "$(prereleaseVersionNumber)"
-           echo "##vso[build.updatebuildnumber]$(prereleaseVersionNumber)"
+           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$brpatchVersionNumber"
+           echo $(prereleaseVersionNumber)
+           echo "##vso[build.updatebuildnumber]$brpatchVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
@@ -68,9 +68,9 @@ stages:
        patch: $[counter(variables['minor'], 0)]
     steps:
       - bash: |
-           bashreleaseVersionNumber=$(major).$(minor).$(patch)
-           echo "##vso[build.updatebuildnumber]$bashreleaseVersionNumber"
-           echo "##vso[task.setvariable variable=releaseVersionNumber]$bashreleaseVersionNumber"
+           patchReleaseVersionNumber=$(major).$(minor).$(patch)
+           echo "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
+           echo "##vso[task.setvariable variable=releaseVersionNumber;]$patchReleaseVersionNumber"
            echo "$(releaseVersionNumber)"
         name: SetMasterBuildName
 
