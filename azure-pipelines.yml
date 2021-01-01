@@ -35,8 +35,8 @@ stages:
     # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
     # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
       - bash: |
-          FOO="runtime value"
-          echo ##vso[task.setvariable variable=FOO;]$FOO
+          BAR="runtime value"
+          echo "##vso[task.setvariable variable=FOO;]$BAR"
           echo $(FOO)
         name: SetFoo
       - bash: |
