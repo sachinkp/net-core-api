@@ -52,7 +52,7 @@ stages:
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;isOutput=true]$prereleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
@@ -93,7 +93,7 @@ stages:
     - script: |
         echo ${{ variables.prereleaseVersionNumber }} 
         echo $(prereleaseVersionNumber)
-        echo $[ dependencies.Build_Prerelease_Version_Number.outputs['SetBranchBuildName.prereleaseVersionNumber'] ]
+#        echo $[ dependencies.Build_Prerelease_Version_Number.outputs['SetBranchBuildName.prereleaseVersionNumber'] ]
     - script: echo 'Hello, world!'
       displayName: 'Run a one-line script'
     - script: |
