@@ -84,7 +84,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: | 
-           [string] $patchReleaseVersionNumber: "$(major).$(minor).$(patch)"
+           [string] $patchReleaseVersionNumber= "$(major).$(minor).$(patch)"
            Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$patchReleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
         name: SetMasterBuildName
