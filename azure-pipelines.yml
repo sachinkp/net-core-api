@@ -15,16 +15,16 @@ variables:
   # Revision or Patch is auto-incremented.
   major: 2 # MAJOR version when you make incompatible API changes
   minor: 1 # MINOR version when you add functionality in a backwards compatible manner
-  #releaseVersionNumber: 'Set dynamically below in a task'
-  #prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
-
+  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+  isPullRequest: $[eq(variables['Build.Reason'], 'PullRequest')]
+  
 stages:
 - stage:
-  displayName: Build_Version_Number
+  displayName: Create Build
   jobs:
     # this job runs only if the branch is not master
   - job: Build_Prerelease_Version_Number
-    condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: ne(variables.isMaster, true)
     variables:
       prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
@@ -40,7 +40,7 @@ stages:
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;isOutput=true]$prereleaseVersionNumber"
            Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+        condition: eq(variables.isPullRequest, true)
         name: SetPRBuildName
 
       # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
@@ -54,7 +54,7 @@ stages:
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;isOutput=true;]$prereleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-        condition: ne(variables['Build.Reason'], 'PullRequest')
+        condition: ne(variables.isPullRequest, true)
         name: SetBranchBuildName
       
       - script: |
@@ -65,7 +65,7 @@ stages:
     # It versions the build with the declared variable minor as prefix and 0 as seed.
     # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
   - job: Build_Release_Version_Number
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    condition: eq(variables.isMaster, true)
     variables:
       patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
     steps:
