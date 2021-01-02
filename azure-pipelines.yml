@@ -16,29 +16,23 @@ variables:
   major: 2 # MAJOR version when you make incompatible API changes
   minor: 1 # MINOR version when you add functionality in a backwards compatible manner
   releaseVersionNumber: 'Set dynamically below in a task'
-  # prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
+  prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
   FOO: 'Set dynamically below in a task'
 
 stages:
 - stage:
-  # this stage runs only if the branch is not master
-  displayName: Build_Branch_Version_Number
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  displayName: Build_Version_Number
   jobs:
-  - job: Build_Branch_Version_Number
+    # this job runs only if the branch is not master
+  - job: Build_Prerelease_Version_Number
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
     variables:
       prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
     steps:
-    # build PR’s automatically and successfully before merging to the master branch
-    # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
-    # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
-      - bash: |
-          BAR="runtime value"
-          echo "##vso[task.setvariable variable=FOO;]$BAR"
-          echo $(FOO)
-        name: SetFoo
-
+      # build PR’s automatically and successfully before merging to the master branch
+      # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
       - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable value
         inputs:
@@ -68,14 +62,11 @@ stages:
           echo ${{ variables.prereleaseVersionNumber }} 
           echo $(prereleaseVersionNumber)
 
-- stage:
-  # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
-  # It versions the build with the declared variable minor as prefix and 0 as seed.
-  # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
-  displayName: Build_Master_Version_Number
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-  jobs:
-  - job: Build_Master_Version_Number
+    # The job Build_Release_Version_Number will run only when Build.SourceBranch is master.
+    # It versions the build with the declared variable minor as prefix and 0 as seed.
+    # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
+  - job: Build_Release_Version_Number
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
     variables:
       patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
     steps:
@@ -93,11 +84,8 @@ stages:
           echo ${{ variables.releaseVersionNumber }} 
           echo $(releaseVersionNumber)
 
-- stage: Build_Steps
-  displayName: Build_Steps
-  condition: always()
-  jobs:  
   - job: Build_Steps
+    condition: always()
     displayName: Build_Steps
     steps:
     - script: echo 'Hello, world!'
