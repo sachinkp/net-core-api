@@ -17,7 +17,6 @@ variables:
   minor: 1 # MINOR version when you add functionality in a backwards compatible manner
   releaseVersionNumber: 'Set dynamically below in a task'
   prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
-  FOO: 'Set dynamically below in a task'
 
 stages:
 - stage:
@@ -39,7 +38,7 @@ stages:
           targetType: 'inline'
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;isOutput=true]$prereleaseVersionNumber"
            Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
@@ -53,7 +52,7 @@ stages:
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;isOutput=true]$prereleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
@@ -76,7 +75,7 @@ stages:
           targetType: 'inline'
           script: | 
            [string] $patchReleaseVersionNumber= "$(major).$(minor).$(patch)"
-           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$patchReleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;isOutput=true]$patchReleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
         name: SetMasterBuildName
 
@@ -85,12 +84,16 @@ stages:
           echo $(releaseVersionNumber)
 
   - job: Build_Steps
+    dependsOn: 
+    - Build_Prerelease_Version_Number
+    - Build_Release_Version_Number
     condition: always()
     displayName: Build_Steps
     steps:
     - script: |
         echo ${{ variables.prereleaseVersionNumber }} 
         echo $(prereleaseVersionNumber)
+        echo $[ dependencies.Build_Prerelease_Version_Number.outputs['SetBranchBuildName.prereleaseVersionNumber'] ]
     - script: echo 'Hello, world!'
       displayName: 'Run a one-line script'
     - script: |
