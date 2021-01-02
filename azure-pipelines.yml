@@ -67,6 +67,10 @@ stages:
            Write-Host "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
+      
+      - script: |
+          echo ${{ variables.prereleaseVersionNumber }} 
+           echo $(prereleaseVersionNumber)
 
 - stage:
   # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
