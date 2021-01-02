@@ -22,16 +22,16 @@ stages:
 - stage:
   displayName: Create Build
   jobs:
-    # this job runs only if the branch is not master
   - job: Build_Release
     variables:
       prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
       patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
     steps:
-      # build PR’s automatically and successfully before merging to the master branch
-      # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+      # This step builds PR’s automatically and successfully before merging to the master branch
+      # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
       # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
       - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable with PR build
         inputs:
@@ -39,12 +39,14 @@ stages:
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-           Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
+           Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"   
         condition: and(ne(variables.isMaster, true), eq(variables.isPullRequest, true))
         name: SetPRBuildName
 
-      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
-      # This function only runs when the build.reason is not equal to Pull Request.
+      # This step only runs when the build.reason is not equal to Pull Request.
+      # Uses system.Build.SourceBranchName as prefix and start our seed value with 0, so for each run of this branch
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-BRANCHNAME.0,1,2,3…n 
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
       - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable with branch build
         inputs:
@@ -53,20 +55,20 @@ stages:
            [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
+           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber" 
         condition: and(ne(variables.isMaster, true), ne(variables.isPullRequest, true))
         name: SetBranchBuildName
       
+      # Verify variables.prereleaseVersionNumber is updated
       - script: |
-          echo ${{ variables.prereleaseVersionNumber }} 
           echo $(prereleaseVersionNumber)
         condition: ne(variables.isMaster, true)
 
-      # The job Build_Release_Version_Number will run only when Build.SourceBranch is master.
+      # This step runs only when Build.SourceBranch is master.
       # It versions the build with the declared variable minor as prefix and 0 as seed.
       # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
       - task: PowerShell@2
-        displayName: Set the releaseVersionNumber variable value
+        displayName: Set the releaseVersionNumber variable value with master build
         inputs:
           targetType: 'inline'
           script: | 
@@ -76,8 +78,8 @@ stages:
         condition: eq(variables.isMaster, true)
         name: SetMasterBuildName
 
+      # Verify variables.releaseVersionNumber is updated
       - script: |
-          echo ${{ variables.releaseVersionNumber }} 
           echo $(releaseVersionNumber)
         condition: eq(variables.isMaster, true)
 
