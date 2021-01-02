@@ -22,7 +22,7 @@ variables:
   brpatchReleaseVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
   patchReleaseVersionNumber: "$(major).$(minor).$(patch)"
   releaseVersionNumber: 'Set dynamically below in a task'
-  prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
+  # prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
   FOO: 'Set dynamically below in a task'
 
 stages:
