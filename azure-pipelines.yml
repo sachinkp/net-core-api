@@ -88,6 +88,9 @@ stages:
     condition: always()
     displayName: Build_Steps
     steps:
+    - script: |
+        echo ${{ variables.prereleaseVersionNumber }} 
+        echo $(prereleaseVersionNumber)
     - script: echo 'Hello, world!'
       displayName: 'Run a one-line script'
     - script: |
