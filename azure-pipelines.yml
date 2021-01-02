@@ -41,19 +41,7 @@ stages:
           echo "##vso[task.setvariable variable=FOO;]$BAR"
           echo $(FOO)
         name: SetFoo
-      
-      - task: PowerShell@2
-        displayName: Set generic datatime prereleaseVersionNumber variable value
-        inputs:
-          targetType: 'inline'
-          script: |
-            [string] $dateTime = (Get-Date -Format 'yyyyMMddTHHmmss')
-            [string] $prereleaseVersionNumber = "$(brpatchReleaseVersionNumber)-ci$dateTime"
-            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-            Write-Host $(prereleaseVersionNumber)
-        name: SetGeneralBuildNumber
-        
+
       - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable value
         inputs:
