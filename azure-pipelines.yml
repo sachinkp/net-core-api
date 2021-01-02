@@ -51,7 +51,7 @@ stages:
             [string] $prereleaseVersionNumber = "$(brpatchReleaseVersionNumber)-ci$dateTime"
             Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
             Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-            Write-Host "$(prereleaseVersionNumber)"
+            Write-Host $(prereleaseVersionNumber)
         name: SetGeneralBuildNumber
         
       - task: PowerShell@2
