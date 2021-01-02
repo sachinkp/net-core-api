@@ -43,7 +43,7 @@ stages:
           echo $(FOO)
         name: SetFoo
       - bash: |
-           prpatchReleaseVersionNumber: "$(major).$(minor)-PullRequest.$(prpatch)"
+           prpatchReleaseVersionNumber= "$(major).$(minor)-PullRequest.$(prpatch)"
            echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$prpatchReleaseVersionNumber"
            echo "##vso[build.updatebuildnumber]$prpatchReleaseVersionNumber"
         condition: eq(variables['Build.Reason'], 'PullRequest')
@@ -52,7 +52,7 @@ stages:
       # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
       # This function only runs when the build.reason is not equal to Pull Request.
       - bash: |
-           brpatchReleaseVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+           brpatchReleaseVersionNumber= "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$brpatchReleaseVersionNumber"
            echo "##vso[build.updatebuildnumber]$brpatchReleaseVersionNumber"
         condition: ne(variables['Build.Reason'], 'PullRequest')
