@@ -22,7 +22,7 @@ variables:
   brpatchReleaseVersionNumber: "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
   patchReleaseVersionNumber: "$(major).$(minor).$(patch)"
   releaseVersionNumber: 'Set dynamically below in a task'
-  # prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
+  prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
   FOO: 'Set dynamically below in a task'
 
 stages:
@@ -43,6 +43,17 @@ stages:
         name: SetFoo
       
       - task: PowerShell@2
+        displayName: Set generic datatime prereleaseVersionNumber variable value
+        inputs:
+          targetType: 'inline'
+          script: |
+            [string] $dateTime = (Get-Date -Format 'yyyyMMddTHHmmss')
+            [string] $prereleaseVersionNumber = "$(versionNumber)-ci$dateTime"
+            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
+            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber]$prereleaseVersionNumber"
+        name: SetGeneralBuildNumber
+        
+      - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable value
         inputs:
           targetType: 'inline'
@@ -60,6 +71,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: | 
+           [string] $prereleaseVersionNumber = "$(brpatchReleaseVersionNumber)"
+           Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchReleaseVersionNumber)"
            Write-Host "$(prereleaseVersionNumber)"
            Write-Host "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
