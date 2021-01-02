@@ -41,18 +41,26 @@ stages:
           echo "##vso[task.setvariable variable=FOO;]$BAR"
           echo $(FOO)
         name: SetFoo
-      - bash: |
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(prpatchReleaseVersionNumber)"
-           echo $(prereleaseVersionNumber)
-           echo "##vso[build.updatebuildnumber]$(prpatchReleaseVersionNumber)"
+      - task: PowerShell@2
+        displayName: Set the prereleaseVersionNumber variable value
+        inputs:
+          targetType: 'inline'
+          script: | 
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$(prpatchReleaseVersionNumber)"
+           Write-Host "$(prereleaseVersionNumber)""
+           Write-Host  "##vso[build.updatebuildnumber]$(prpatchReleaseVersionNumber)"
         condition: eq(variables['Build.Reason'], 'PullRequest')
         name: SetPRBuildName
     # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
     # This function only runs when the build.reason is not equal to Pull Request.
-      - bash: |
-           echo "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchReleaseVersionNumber)"
-           echo $(prereleaseVersionNumber)
-           echo "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
+      - task: PowerShell@2
+        displayName: Set the prereleaseVersionNumber variable value
+        inputs:
+          targetType: 'inline'
+          script: | 
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchReleaseVersionNumber)"
+           Write-Host $(prereleaseVersionNumber)
+           Write-Host "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
 
