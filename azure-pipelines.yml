@@ -62,15 +62,15 @@ stages:
           script: | 
            [string] $prereleaseVersionNumber = "$(brpatchReleaseVersionNumber)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$(brpatchReleaseVersionNumber)"
-           Write-Host "$(prereleaseVersionNumber)"
-           Write-Host "##vso[build.updatebuildnumber]$(brpatchReleaseVersionNumber)"
+           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
+           Write-Host $(prereleaseVersionNumber)
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
       
       - script: |
           echo ${{ variables.prereleaseVersionNumber }} 
-           echo $(prereleaseVersionNumber)
+          echo $(prereleaseVersionNumber)
 
 - stage:
   # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
