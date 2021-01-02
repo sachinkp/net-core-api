@@ -60,11 +60,11 @@ stages:
         inputs:
           targetType: 'inline'
           script: | 
-           [string] $prereleaseVersionNumber = "$(brpatchReleaseVersionNumber)"
+           [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-           Write-Host $(prereleaseVersionNumber)
+           echo $(prereleaseVersionNumber)
         condition: ne(variables['Build.Reason'], 'PullRequest')
         name: SetBranchBuildName
       
