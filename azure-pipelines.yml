@@ -28,15 +28,17 @@ stages:
       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
       patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
     steps:
-      # This step builds PR’s automatically and successfully before merging to the master branch
-      # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
-      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
-      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
+
       - task: Bash@3
         inputs:
           filePath: 'coverage_test.sh'
           arguments: '{{HostUrl}} {{username}} {{password}} 20'
+        name: RunCodeCoverage
 
+      # This step builds PR’s automatically and successfully before merging to the master branch
+      # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
       - task: PowerShell@2
         displayName: Set the prereleaseVersionNumber variable with PR build
         inputs:
