@@ -10,14 +10,18 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
+- group: SharedTools
   # Manually adjust the version number as needed for semantic versioning.
   # Revision or Patch is auto-incremented.
-  major: 2 # MAJOR version when you make incompatible API changes
-  minor: 1 # MINOR version when you add functionality in a backwards compatible manner
-  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
-  isPullRequest: $[eq(variables['Build.Reason'], 'PullRequest')]
-  
+- name: major # MAJOR version when you make incompatible API changes
+  value: 2 
+- name: minor # MINOR version when you add functionality in a backwards compatible manner
+  value: 1 
+- name: isMaster
+  value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+- name: isPullRequest
+  value: $[eq(variables['Build.Reason'], 'PullRequest')]
+
 stages:
 - stage:
   displayName: Create Build
