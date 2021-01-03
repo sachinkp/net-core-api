@@ -32,7 +32,7 @@ stages:
       - task: Bash@3
         inputs:
           filePath: 'coverage_test.sh'
-          arguments: $HostUrl $username $password 20
+          arguments: $(HostUrl) $(username) $(password) 20
         name: RunCodeCoverage
 
       # This step builds PR’s automatically and successfully before merging to the master branch
