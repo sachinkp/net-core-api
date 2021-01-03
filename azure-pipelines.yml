@@ -32,7 +32,7 @@ stages:
       - task: Bash@3
         inputs:
           filePath: 'coverage_test.sh'
-          arguments: '{{HostUrl}} {{username}} {{password}} 20'
+          arguments: $HostUrl $username $password 20
         name: RunCodeCoverage
 
       # This step builds PR’s automatically and successfully before merging to the master branch
@@ -47,7 +47,7 @@ stages:
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
            Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
            Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"   
-        condition: and(ne(variables.isMaster, true), eq(variables.isPullRequest, true))
+        condition: and(succeeded(), ne(variables.isMaster, true), eq(variables.isPullRequest, true))
         name: SetPRBuildName
 
       # This step only runs when the build.reason is not equal to Pull Request.
