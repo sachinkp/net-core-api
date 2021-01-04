@@ -35,6 +35,12 @@ stages:
 
       - task: Bash@3
         inputs:
+          targetType: 'inline'
+          script: 'docker run --rm octopusdeploy/octo version'
+        name: RunOctopus
+        
+      - task: Bash@3
+        inputs:
           filePath: 'coverage_test.sh'
           arguments: $(HostUrl) $(username) $(password) 20
         name: RunCodeCoverage
