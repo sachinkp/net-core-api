@@ -37,8 +37,9 @@ stages:
         inputs:
           targetType: 'inline'
           script: 'docker run --rm octopusdeploy/octo version'
-        name: RunOctopus
+        name: VerifyOctopusVersion
         
+      # Run sonar scan, gather code coverage and execute contract and functional tests
       - task: Bash@3
         inputs:
           filePath: 'coverage_test.sh'
