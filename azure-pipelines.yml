@@ -56,7 +56,7 @@ stages:
           targetType: 'inline'
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
            Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"   
         condition: and(succeeded(), ne(variables.isMaster, true), eq(variables.isPullRequest, true))
         name: SetPRBuildName
@@ -72,15 +72,10 @@ stages:
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber" 
         condition: and(ne(variables.isMaster, true), ne(variables.isPullRequest, true))
         name: SetBranchBuildName
-      
-      # Verify variables.prereleaseVersionNumber is updated
-      - script: |
-          echo $(prereleaseVersionNumber)
-        condition: ne(variables.isMaster, true)
 
       # This step runs only when Build.SourceBranch is master.
       # It versions the build with the declared variable minor as prefix and 0 as seed.
@@ -99,7 +94,13 @@ stages:
       # Verify variables.releaseVersionNumber is updated
       - script: |
           echo $(releaseVersionNumber)
-        condition: eq(variables.isMaster, true)
+        
+      # Run sonar scan, gather code coverage and execute contract and functional tests
+      - task: Bash@3
+        inputs:
+          filePath: 'build_test.sh'
+          arguments: $(releaseVersionNumber)
+        name: CreateRelease
 
       - script: echo 'Hello, world!'
         displayName: 'Run a one-line script'
