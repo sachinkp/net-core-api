@@ -101,5 +101,5 @@ stages:
       - task: Bash@3
         inputs:
           filePath: 'build_test.sh'
-          arguments: $(releaseVersionNumber) "$(application_name)"
+          arguments: $(releaseVersionNumber) ${{variables.application_name}}
         name: CreateRelease
