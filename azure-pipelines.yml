@@ -12,7 +12,7 @@ pool:
 variables:
 - group: SharedTools
 - name: application_name
-  value: sp-api-institution
+  value: 'sp-api-institution'
   # Manually adjust the version number as needed for semantic versioning.
   # Revision or Patch is auto-incremented.
 - name: major # MAJOR version when you make incompatible API changes
@@ -101,5 +101,5 @@ stages:
       - task: Bash@3
         inputs:
           filePath: 'build_test.sh'
-          arguments: $(releaseVersionNumber) $(application_name)
+          arguments: $(releaseVersionNumber) "$(application_name)"
         name: CreateRelease
