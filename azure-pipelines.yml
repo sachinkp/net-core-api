@@ -38,8 +38,8 @@ stages:
           arguments: $(HostUrl) $(application_name) $(application_name) 20
         name: RunCodeCoverage
     
-    # Create semversion
-    - template: azure-pipelines-semver.yaml 
+      # Create semversion
+      - template: azure-pipelines-semver.yaml 
 
       # Verify variables.releaseVersionNumber is updated
       - script: |
