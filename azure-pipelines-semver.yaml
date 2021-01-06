@@ -1,1 +1,61 @@
 
+variables:
+  # Manually adjust the version number as needed for semantic versioning.
+  # Revision or Patch is auto-incremented.
+- name: major # MAJOR version when you make incompatible API changes
+  value: 2 
+- name: minor # MINOR version when you add functionality in a backwards compatible manner
+  value: 1 
+- name: isMaster
+  value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+- name: isPullRequest
+  value: $[eq(variables['Build.Reason'], 'PullRequest')]
+steps:
+# This step builds PR’s automatically and successfully before merging to the master branch
+      # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
+      - task: PowerShell@2
+        displayName: Set the prereleaseVersionNumber variable with PR build
+        inputs:
+          targetType: 'inline'
+          script: | 
+           [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"   
+        condition: and(succeeded(), ne(variables.isMaster, true), eq(variables.isPullRequest, true))
+        name: SetPRBuildName
+
+      # This step only runs when the build.reason is not equal to Pull Request.
+      # Uses system.Build.SourceBranchName as prefix and start our seed value with 0, so for each run of this branch
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-BRANCHNAME.0,1,2,3…n 
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
+      - task: PowerShell@2
+        displayName: Set the prereleaseVersionNumber variable with branch build
+        inputs:
+          targetType: 'inline'
+          script: | 
+           [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
+           Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber" 
+        condition: and(ne(variables.isMaster, true), ne(variables.isPullRequest, true))
+        name: SetBranchBuildName
+
+      # This step runs only when Build.SourceBranch is master.
+      # It versions the build with the declared variable minor as prefix and 0 as seed.
+      # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
+      - task: PowerShell@2
+        displayName: Set the releaseVersionNumber variable value with master build
+        inputs:
+          targetType: 'inline'
+          script: | 
+           [string] $patchReleaseVersionNumber= "$(major).$(minor).$(patch)"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;isOutput=true]$patchReleaseVersionNumber"
+           Write-Host "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
+        condition: eq(variables.isMaster, true)
+        name: SetMasterBuildName
+
+      # Verify variables.releaseVersionNumber is updated
+      - script: |
+          echo $(releaseVersionNumber)
