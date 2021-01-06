@@ -1,17 +1,6 @@
 
-variables:
-  # Manually adjust the version number as needed for semantic versioning.
-  # Revision or Patch is auto-incremented.
-- name: major # MAJOR version when you make incompatible API changes
-  value: 2 
-- name: minor # MINOR version when you add functionality in a backwards compatible manner
-  value: 1 
-- name: isMaster
-  value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
-- name: isPullRequest
-  value: $[eq(variables['Build.Reason'], 'PullRequest')]
-steps:
-# This step builds PR’s automatically and successfully before merging to the master branch
+  steps:
+      # This step builds PR’s automatically and successfully before merging to the master branch
       # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
       # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
       # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
