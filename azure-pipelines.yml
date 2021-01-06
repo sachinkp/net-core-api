@@ -10,99 +10,96 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
+- group: SharedTools
+- name: application_name
+  value: sp-api-institution
   # Manually adjust the version number as needed for semantic versioning.
   # Revision or Patch is auto-incremented.
-  major: 2 # MAJOR version when you make incompatible API changes
-  minor: 1 # MINOR version when you add functionality in a backwards compatible manner
-  releaseVersionNumber: 'Set dynamically below in a task'
-  # prereleaseVersionNumber: 'Set dynamically below in a task'  # Use pre-release version numbers for prereleases 
-  FOO: 'Set dynamically below in a task'
+- name: major # MAJOR version when you make incompatible API changes
+  value: 2 
+- name: minor # MINOR version when you add functionality in a backwards compatible manner
+  value: 1 
+- name: isMaster
+  value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+- name: isPullRequest
+  value: $[eq(variables['Build.Reason'], 'PullRequest')]
 
 stages:
 - stage:
-  # this stage runs only if the branch is not master
-  displayName: Build_Branch_Version_Number
-  condition: ne(variables['Build.SourceBranch'], 'refs/heads/master')
+  displayName: Create Build
   jobs:
-  - job: Build_Branch_Version_Number
+  - job: Build_Release
     variables:
       prpatch: $[counter(variables['system.pullrequest.pullrequestid'], 0)]
       brpatch: $[counter(variables['build.sourcebranchname'], 0)]
+      patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
     steps:
-    # build PR’s automatically and successfully before merging to the master branch
-    # Use system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
-    # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
-      - bash: |
-          BAR="runtime value"
-          echo "##vso[task.setvariable variable=FOO;]$BAR"
-          echo $(FOO)
-        name: SetFoo
 
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: 'docker run --rm octopusdeploy/octo version'
+        name: VerifyOctopusVersion
+        
+      # Run sonar scan, gather code coverage and execute contract and functional tests
+      - task: Bash@3
+        inputs:
+          filePath: 'coverage_test.sh'
+          arguments: $(HostUrl) $(application_name) $(application_name) 20
+        name: RunCodeCoverage
+
+      # This step builds PR’s automatically and successfully before merging to the master branch
+      # Uses system.pullrequest.pullrequestid as prefix and start our seed value with 0, so for each run of this PR , 
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-PullRequest.0,1,2,3…n
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
       - task: PowerShell@2
-        displayName: Set the prereleaseVersionNumber variable value
+        displayName: Set the prereleaseVersionNumber variable with PR build
         inputs:
           targetType: 'inline'
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-PullRequest.$(prpatch)"
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-           Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host  "##vso[build.updatebuildnumber]$prereleaseVersionNumber"   
+        condition: and(succeeded(), ne(variables.isMaster, true), eq(variables.isPullRequest, true))
         name: SetPRBuildName
 
-      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function. 
-      # This function only runs when the build.reason is not equal to Pull Request.
+      # This step only runs when the build.reason is not equal to Pull Request.
+      # Uses system.Build.SourceBranchName as prefix and start our seed value with 0, so for each run of this branch
+      # the value of variable prpatch will increment as 0,1,2…and build will be versioned as 2.0-BRANCHNAME.0,1,2,3…n 
+      # Update the version of the running pipeline using Azure DevOps’s build.updatebuildnumber function.
       - task: PowerShell@2
-        displayName: Set the prereleaseVersionNumber variable value
+        displayName: Set the prereleaseVersionNumber variable with branch build
         inputs:
           targetType: 'inline'
           script: | 
            [string] $prereleaseVersionNumber = "$(major).$(minor)-$(Build.SourceBranchName).$(brpatch)"
            Write-Host "Setting the prerelease version number variable to '$prereleaseVersionNumber'."
-           Write-Host "##vso[task.setvariable variable=prereleaseVersionNumber;]$prereleaseVersionNumber"
-           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber"
-        condition: ne(variables['Build.Reason'], 'PullRequest')
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$prereleaseVersionNumber"
+           Write-Host "##vso[build.updatebuildnumber]$prereleaseVersionNumber" 
+        condition: and(ne(variables.isMaster, true), ne(variables.isPullRequest, true))
         name: SetBranchBuildName
-      
-      - script: |
-          echo ${{ variables.prereleaseVersionNumber }} 
-          echo $(prereleaseVersionNumber)
 
-- stage:
-  # The stage Build_Master_Version_Number will run only when Build.SourceBranch is master.
-  # It versions the build with the declared variable minor as prefix and 0 as seed.
-  # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
-  displayName: Build_Master_Version_Number
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
-  jobs:
-  - job: Build_Master_Version_Number
-    variables:
-      patch: $[counter(variables['minor'], 0)] # version when you make backwards compatible bug fixes.
-    steps:
+      # This step runs only when Build.SourceBranch is master.
+      # It versions the build with the declared variable minor as prefix and 0 as seed.
+      # Once the build is completed after the merge, we should see version 2.0.0 as the build version for master branch and all subsequent builds will be 2.0.0, 2.0.1, 2.0.2, 3, 4….n
       - task: PowerShell@2
-        displayName: Set the releaseVersionNumber variable value
+        displayName: Set the releaseVersionNumber variable value with master build
         inputs:
           targetType: 'inline'
           script: | 
            [string] $patchReleaseVersionNumber= "$(major).$(minor).$(patch)"
-           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;]$patchReleaseVersionNumber"
+           Write-Host "##vso[task.setvariable variable=releaseVersionNumber;isOutput=true]$patchReleaseVersionNumber"
            Write-Host "##vso[build.updatebuildnumber]$patchReleaseVersionNumber"
+        condition: eq(variables.isMaster, true)
         name: SetMasterBuildName
 
+      # Verify variables.releaseVersionNumber is updated
       - script: |
-          echo ${{ variables.releaseVersionNumber }} 
           echo $(releaseVersionNumber)
-
-- stage: Build_Steps
-  displayName: Build_Steps
-  condition: always()
-  jobs:  
-  - job: Build_Steps
-    displayName: Build_Steps
-    steps:
-    - script: echo 'Hello, world!'
-      displayName: 'Run a one-line script'
-    - script: |
-        echo 'Add other tasks to build, test, and deploy your project.'
-        echo 'See https://aka.ms/yaml'
-      displayName: 'Run a multi-line script'
+        
+      # Run sonar scan, gather code coverage and execute contract and functional tests
+      - task: Bash@3
+        inputs:
+          filePath: 'build_test.sh'
+          arguments: $(releaseVersionNumber) ${{variables.application_name}}
+        name: CreateRelease
